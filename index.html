@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Almanaque Ouxe — Controle Total</title>
+    <style>
+        /* Estilos Base */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg: #000c1a;
+            --panel: #071428;
+            --accent: #00bfff;
+            --gold: #ffd700;
+            --found: #32cd32;
+            --cell-size: clamp(30px, 4.5vw, 42px);
+        }
+
+        body {
+            margin: 0; font-family: 'Inter', sans-serif;
+            background: var(--bg); color: #fff;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Layout Responsivo */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 95%;
+            max-width: 1300px;
+            padding: 10px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-container {
+                grid-template-columns: 200px 1fr 200px;
+                align-items: start;
+            }
+        }
+
+        /* Anúncios */
+        .ads-sidebar { display: flex; flex-direction: column; gap: 10px; }
+        .ad-box {
+            width: 100%; aspect-ratio: 16/11;
+            background: linear-gradient(135deg, #1b3b6a, #071428);
+            border: 2px solid rgba(0, 191, 255, 0.3);
+            border-radius: 8px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ad-img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Jogo */
+        .game-area {
+            background: var(--panel);
+            border: 2px solid var(--accent);
+            border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(10, var(--cell-size));
+            gap: 5px; margin: 15px 0;
+        }
+
+        .cell {
+            width: var(--cell-size); height: var(--cell-size);
+            background: rgba(0, 191, 255, 0.1);
+            border: 1px solid var(--accent); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: calc(var(--cell-size) * 0.45);
+            color: var(--accent); cursor: pointer; transition: 0.2s;
+        }
+        .cell.selected { background: var(--accent); color: #000; }
+        .cell.found { background: var(--found); color: #000; border-color: var(--found); }
+
+        /* Tira de Mensagem (Mural) */
+        .mural-display-bar {
+            width: 100%; margin-top: 20px;
+            padding: 15px; background: rgba(0, 191, 255, 0.05);
+            border-top: 1px solid var(--accent);
+            border-radius: 0 0 10px 10px;
+            text-align: center;
+        }
+        #mural-text {
+            color: var(--gold); font-size: 16px;
+            font-style: italic; font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Admin */
+        #admin {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #071428;
+            padding: 25px; border: 3px solid var(--gold);
+            z-index: 1000; width: 90%; max-width: 500px;
+            border-radius: 15px; max-height: 85vh; overflow-y: auto;
+        }
+        .admin-section-title { color: var(--accent); font-size: 12px; font-weight: bold; margin: 15px 0 5px; text-transform: uppercase; }
+        .upload-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #1b3b6a; }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; }
+
+        footer { padding: 20px; opacity: 0.5; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 id="titulo" title="Clique 8 vezes para Admin">🎯 ALMANAQUE OUXE</h1>
+</header>
+
+<div class="main-container">
+    <aside class="ads-sidebar">
+        <div class="ad-box"><img id="ad1" class="ad-img"></div>
+        <div class="ad-box"><img id="ad2" class="ad-img"></div>
+        <div class="ad-box"><img id="ad3" class="ad-img"></div>
+        <div class="ad-box"><img id="ad4" class="ad-img"></div>
+        <div class="ad-box"><img id="ad5" class="ad-img"></div>
+    </aside>
+
+    <main class="game-area">
+        <div style="width:100%; display:flex; justify-content:space-between; color:var(--gold); font-weight: bold;">
+            <span id="score">Pontos: 0</span>
+            <button onclick="initGame()" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:4px 10px; border-radius:4px; cursor:pointer;">Novo Jogo</button>
+        </div>
+
+        <div id="grid"></div>
+        <div id="wordList" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom: 10px;"></div>
+
+        <div class="mural-display-bar">
+            <div id="mural-text">"Tudo posso naquele que me fortalece."</div>
+        </div>
+    </main>
+
+    <aside class="ads-sidebar">
+        <div class="ad-box"><img id="ad6" class="ad-img"></div>
+        <div class="ad-box"><img id="ad7" class="ad-img"></div>
+        <div class="ad-box"><img id="ad8" class="ad-img"></div>
+        <div class="ad-box"><img id="ad9" class="ad-img"></div>
+        <div class="ad-box"><img id="ad10" class="ad-img"></div>
+    </aside>
+</div>
+
+<div id="overlay"></div>
+<div id="admin">
+    <h2 style="color:var(--gold); margin: 0 0 20px 0; text-align: center;">Painel de Controle</h2>
+    
+    <div class="admin-section-title">Mural de Mensagens (Ao Vivo):</div>
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="adminMuralInput" placeholder="Digite o versículo ou frase..." style="flex:1; padding:10px; background:#000; border:1px solid var(--accent); color:#fff; border-radius:5px;">
+        <button onclick="updateMuralNow()" style="background:#25d366; color:#fff; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">Enviar</button>
+    </div>
+
+    <div class="admin-section-title">Palavras do Jogo (separadas por vírgula):</div>
+    <textarea id="wordsInput" rows="3" style="width:100%; background:#000; color:#fff; border:1px solid var(--accent); padding:10px; border-radius:5px;">FEIRA,OUXE,GATO,PRINCESA,SERTAO,BEBE,AGUA,CRUZADAS</textarea>
+    
+    <div class="admin-section-title">Imagens dos Anúncios:</div>
+    <div id="uploadGrid" style="font-size: 11px;"></div>
+
+    <button onclick="saveAdmin()" style="width:100%; padding:15px; margin-top:20px; background:var(--gold); color:#000; border:none; font-weight:bold; cursor:pointer; border-radius:5px;">SALVAR E REINICIAR</button>
+    <button onclick="closeAdmin()" style="width:100%; margin-top:10px; background:none; color:#888; border:none; cursor:pointer;">Fechar sem salvar</button>
+</div>
+
+<footer>Jesus é o Senhor!</footer>
+
+<script>
+    let dict = ["FEIRA","OUXE","GATO","PRINCESA","SERTAO","BEBE","AGUA","CRUZADAS"];
+    let words = [], grid = [], selected = [], found = [], score = 0, clickTitle = 0;
+    const size = 10;
+
+    function initGame() {
+        words = [...dict].sort(() => Math.random() - 0.5).slice(0, 8).map(w => w.toUpperCase());
+        grid = Array.from({length: size}, () => Array.from({length: size}, () => ""));
+        
+        words.forEach(word => {
+            let placed = false, tries = 0;
+            while(!placed && tries < 100) {
+                const dr = [0,1,1,1,0,-1,-1,-1][tries%8], dc = [1,1,0,-1,-1,-1,0,1][tries%8];
+                const r = Math.floor(Math.random()*size), c = Math.floor(Math.random()*size);
+                if(canPlace(word, r, c, dr, dc)) {
+                    for(let k=0; k<word.length; k++) grid[r+k*dr][c+k*dc] = word[k];
+                    placed = true;
+                }
+                tries++;
+            }
+        });
+
+        const alph = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for(let i=0; i<size; i++) 
+            for(let j=0; j<size; j++) 
+                if(!grid[i][j]) grid[i][j] = alph[Math.floor(Math.random()*26)];
+
+        found = []; score = 0;
+        renderGrid();
+        updateUI();
+    }
+
+    function canPlace(word, r, c, dr, dc) {
+        for(let k=0; k<word.length; k++) {
+            const nr = r+k*dr, nc = c+k*dc;
+            if(nr<0 || nr>=size || nc<0 || nc>=size) return false;
+            if(grid[nr][nc] && grid[nr][nc] !== word[k]) return false;
+        }
+        return true;
+    }
+
+    function renderGrid() {
+        const gEl = document.getElementById('grid');
+        gEl.innerHTML = '';
+        grid.forEach((row, i) => row.forEach((char, j) => {
+            const d = document.createElement('div');
+            d.className = 'cell'; d.textContent = char;
+            d.dataset.i = i; d.dataset.j = j;
+            
+            const handleStart = () => { selected = [{i, j}]; d.classList.add('selected'); };
+            const handleMove = (e) => {
+                if(e.buttons !== 1 && e.type !== 'touchmove') return;
+                let target = d;
+                if(e.type === 'touchmove') {
+                    const touch = e.touches[0];
+                    target = document.elementFromPoint(touch.clientX, touch.clientY);
+                }
+                if(target && target.className && target.className.includes('cell')) {
+                    const ti = parseInt(target.dataset.i), tj = parseInt(target.dataset.j);
+                    const last = selected[selected.length-1];
+                    if(last && (last.i !== ti || last.j !== tj)) {
+                        if(Math.abs(ti-last.i) <= 1 && Math.abs(tj-last.j) <= 1) {
+                            selected.push({i:ti, j:tj}); target.classList.add('selected');
+                        }
+                    }
+                }
+            };
+
+            d.onmousedown = handleStart;
+            d.onmouseover = handleMove;
+            d.ontouchstart = (e) => { e.preventDefault(); handleStart(); };
+            d.ontouchmove = handleMove;
+            d.onmouseup = d.ontouchend = checkWord;
+            gEl.appendChild(d);
+        }));
+    }
+
+    function checkWord() {
+        const s = selected.map(sel => grid[sel.i][sel.j]).join('');
+        const r = s.split('').reverse().join('');
+        const match = words.find(w => (w === s || w === r) && !found.includes(w));
+        if(match) {
+            found.push(match); score += 10;
+            selected.forEach(sel => {
+                const cell = document.querySelector(`[data-i='${sel.i}'][data-j='${sel.j}']`);
+                if(cell) cell.classList.add('found');
+            });
+        }
+        document.querySelectorAll('.cell.selected').forEach(c => c.classList.remove('selected'));
+        selected = []; updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('score').textContent = `Pontos: ${score}`;
+        document.getElementById('wordList').innerHTML = words.map(w => `
+            <span style="font-size:12px; padding:4px 10px; border:1px solid var(--accent); border-radius:12px; font-weight:bold; ${found.includes(w)?'color:var(--found); border-color:var(--found); text-decoration:line-through; background:rgba(50,205,50,0.1);':'color:var(--accent);'}">
+                ${w}
+            </span>
+        `).join('');
+    }
+
+    // FUNÇÕES DO ADMIN
+    function updateMuralNow() {
+        const val = document.getElementById('adminMuralInput').value;
+        if(val.trim() !== "") {
+            document.getElementById('mural-text').textContent = `"${val}"`;
+            document.getElementById('adminMuralInput').value = "";
+            alert("Mensagem enviada ao mural!");
+        }
+    }
+
+    document.getElementById('titulo').onclick = () => {
+        if(++clickTitle >= 8) {
+            const d = new Date();
+            const pass = String(d.getDate()).padStart(2,'0') + String(d.getMonth()+1).padStart(2,'0') + String(d.getHours()).padStart(2,'0');
+            if(prompt("Senha (DDMMHH):") === pass) {
+                document.getElementById('admin').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                renderUploads();
+            }
+            clickTitle = 0;
+        }
+    };
+
+    function renderUploads() {
+        const container = document.getElementById('uploadGrid');
+        container.innerHTML = "";
+        for(let i=1; i<=10; i++) {
+            const row = document.createElement('div');
+            row.className = 'upload-row';
+            row.innerHTML = `<span>Espaço ${i}</span><input type="file" id="file${i}" accept="image/*">`;
+            container.appendChild(row);
+        }
+    }
+
+    function saveAdmin() {
+        dict = document.getElementById('wordsInput').value.split(',').map(s => s.trim()).filter(s => s !== "");
+        for(let i=1; i<=10; i++) {
+            const file = document.getElementById(`file${i}`).files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById(`ad${i}`).src = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        }
+        initGame(); closeAdmin();
+    }
+
+    function closeAdmin() { document.getElementById('admin').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; }
+
+    // Imagens Iniciais
+    for(let i=1; i<=10; i++) document.getElementById(`ad${i}`).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 110'%3E%3Crect fill='%231b3b6a' width='160' height='110'/%3E%3Ctext x='50%25' y='55%25' font-size='10' fill='%23ffd700' text-anchor='middle'%3EANÚNCIO ${i}%3C/text%3E%3C/svg%3E`;
+
+    initGame();
+</script>
+</body>
+</html>
